@@ -19,6 +19,8 @@ _EXEMPT_PATHS: frozenset[str] = frozenset(
         "/",
         "/api/health",
         "/api/csrf-token",
+        "/api/auth/google/login",
+        "/api/auth/google/callback",
         "/docs",
         "/openapi.json",
     }

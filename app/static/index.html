@@ -44,6 +44,17 @@
                 <span aria-hidden="true">🤖</span> AI Chat
             </button>
         </div>
+        <div class="nav__auth" id="auth-section" aria-label="User authentication">
+            <a href="/api/auth/google/login" class="btn btn--google" id="btn-google-login" aria-label="Sign in with Google">
+                <span aria-hidden="true">🔐</span> Sign In
+            </a>
+            <div class="nav__user-profile" id="user-profile" hidden>
+                <span class="nav__user-name" id="user-name"></span>
+                <button class="btn btn--logout" id="btn-logout" aria-label="Sign out">
+                    Sign Out
+                </button>
+            </div>
+        </div>
     </nav>
 
     <!-- Main Content -->
@@ -89,8 +100,8 @@
                             <span id="transport-distance-hint" class="form-hint">Daily commute distance in
                                 kilometers</span>
                         </div>
-                        <div class="live-stats" id="transport-live-stats" style="margin-top: 1rem; padding: 0.5rem; background: rgba(255,255,255,0.05); border-radius: 4px; font-size: 0.85rem;">
-                            <span style="font-weight: 600; display: block; margin-bottom: 0.25rem;">Live Estimate:</span>
+                        <div class="live-stats" id="transport-live-stats">
+                            <span class="live-stats__label">Live Estimate:</span>
                             Distance: <span id="distance-display">0</span> km | 
                             Fuel: <span id="fuel-burn-display">0</span> L | 
                             CO₂: <span id="co2-live-display">0.0</span> kg
@@ -146,7 +157,8 @@
                         <div class="form-group">
                             <label for="food-servings" class="form-label">Servings</label>
                             <input type="number" id="food-servings" class="form-input" min="0.1" max="100" step="0.1"
-                                placeholder="e.g. 3" required>
+                                placeholder="e.g. 3" aria-describedby="food-servings-hint" required>
+                            <span id="food-servings-hint" class="form-hint">Number of servings consumed today</span>
                         </div>
                     </div>
                 </div>
@@ -170,7 +182,8 @@
                         <div class="form-group">
                             <label for="waste-weight" class="form-label">Weight (kg)</label>
                             <input type="number" id="waste-weight" class="form-input" min="0.1" max="10000" step="0.1"
-                                placeholder="e.g. 2" required>
+                                placeholder="e.g. 2" aria-describedby="waste-weight-hint" required>
+                            <span id="waste-weight-hint" class="form-hint">Daily waste weight in kilograms</span>
                         </div>
                     </div>
                 </div>

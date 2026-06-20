@@ -5,6 +5,7 @@ for easy testing when credentials are not configured in app/config.py.
 """
 
 import logging
+import secrets
 
 from fastapi import APIRouter, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
@@ -119,8 +120,6 @@ async def google_callback(
             ) from exc
 
     # Set secure session cookie
-    import secrets
-
     session_token = secrets.token_hex(32)
     _user_sessions[session_token] = profile
 

@@ -132,10 +132,9 @@ def test_chat_rate_limiting():
 
     from fastapi.testclient import TestClient
 
-    from app.main import create_app
-
     # Mock settings.rate_limit.chat_requests_per_minute to 2 to trigger limit quickly
     from app.config import settings
+    from app.main import create_app
 
     with patch.object(settings.rate_limit, "chat_requests_per_minute", 2):
         local_app_mocked = create_app()
@@ -201,3 +200,76 @@ def test_middleware_static_bypass():
     # rather than 403 (CSRF missing) or 429.
     response = local_client.post("/static/non_existent_file.js")
     assert response.status_code == 405
+
+
+def test_security_headers_complete():
+    """Verify all OWASP security headers are present in responses."""
+    from fastapi.testclient import TestClient
+
+    from app.main import create_app
+
+    local_app = create_app()
+    local_client = TestClient(local_app)
+
+    response = local_client.get("/api/health")
+    headers = response.headers
+
+    # Core security headers
+    assert headers["X-Content-Type-Options"] == "nosniff"
+    assert headers["X-Frame-Options"] == "DENY"
+    assert headers["X-XSS-Protection"] == "1; mode=block"
+    assert headers["Referrer-Policy"] == "strict-origin-when-cross-origin"
+
+    # CSP must NOT contain unsafe-inline in script-src
+    csp = headers["Content-Security-Policy"]
+    assert "default-src 'self'" in csp
+    assert "script-src 'self'" in csp
+    assert "'unsafe-inline'" not in csp.split("script-src")[1].split(";")[0]
+
+    # Additional hardening headers
+    assert headers["Cross-Origin-Opener-Policy"] == "same-origin"
+    assert headers["Cross-Origin-Resource-Policy"] == "same-origin"
+    assert headers["X-Download-Options"] == "noopen"
+    assert headers["X-Permitted-Cross-Domain-Policies"] == "none"
+    assert "camera=()" in headers["Permissions-Policy"]
+    assert "microphone=()" in headers["Permissions-Policy"]
+
+    # HSTS
+    hsts = headers["Strict-Transport-Security"]
+    assert "max-age=31536000" in hsts
+    assert "includeSubDomains" in hsts
+    assert "preload" in hsts
+
+
+def test_auth_google_login_visible():
+    """Verify the Google Auth login endpoint is accessible."""
+    from unittest.mock import patch
+
+    from fastapi.testclient import TestClient
+
+    from app.config import settings
+    from app.main import create_app
+
+    local_app = create_app()
+    local_client = TestClient(local_app)
+
+    with patch.object(settings.google, "auth_simulator_enabled", True):
+        response = local_client.get("/api/auth/google/login", follow_redirects=False)
+        assert response.status_code == 307
+        assert "callback" in response.headers["location"]
+
+
+def test_auth_user_endpoint():
+    """Verify the /api/auth/user endpoint returns user state."""
+    from fastapi.testclient import TestClient
+
+    from app.main import create_app
+
+    local_app = create_app()
+    local_client = TestClient(local_app)
+
+    response = local_client.get("/api/auth/user")
+    assert response.status_code == 200
+    data = response.json()
+    assert "authenticated" in data
+    assert "user" in data

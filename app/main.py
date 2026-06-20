@@ -80,15 +80,23 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         )
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline'; "
-            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            "script-src 'self' https://www.googletagmanager.com; "
+            "style-src 'self' 'unsafe-inline' "
+            "https://fonts.googleapis.com; "
             "font-src 'self' https://fonts.gstatic.com; "
-            "img-src 'self' data:; "
-            "connect-src 'self'"
+            "img-src 'self' data: https://www.google-analytics.com "
+            "https://www.googletagmanager.com "
+            "https://stats.g.doubleclick.net; "
+            "connect-src 'self' https://www.google-analytics.com "
+            "https://stats.g.doubleclick.net;"
         )
         response.headers["Strict-Transport-Security"] = (
             "max-age=31536000; includeSubDomains; preload"
         )
+        response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+        response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
+        response.headers["X-Download-Options"] = "noopen"
+        response.headers["X-Permitted-Cross-Domain-Policies"] = "none"
         # Remove server identification headers
         if "Server" in response.headers:
             del response.headers["Server"]

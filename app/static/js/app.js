@@ -746,6 +746,94 @@ const Analytics = {
 };
 
 // =============================================================================
+// Google Auth Manager — Login / Logout UI State
+// =============================================================================
+
+/**
+ * Manages authentication state and UI updates.
+ * Checks /api/auth/user on load to toggle login/logout buttons.
+ */
+const AuthManager = {
+    _loginButton: null,
+    _profileSection: null,
+    _userName: null,
+    _logoutButton: null,
+
+    /**
+     * Initialize auth UI elements and check current auth state.
+     */
+    initialize() {
+        this._loginButton = document.getElementById("btn-google-login");
+        this._profileSection = document.getElementById("user-profile");
+        this._userName = document.getElementById("user-name");
+        this._logoutButton = document.getElementById("btn-logout");
+
+        if (this._logoutButton) {
+            this._logoutButton.addEventListener("click", () => this._logout());
+        }
+
+        this._checkAuthState();
+    },
+
+    /**
+     * Fetch current user authentication state from the server.
+     * @private
+     */
+    async _checkAuthState() {
+        try {
+            const data = await ApiClient.get("/api/auth/user");
+            if (data.authenticated && data.user) {
+                this._showProfile(data.user);
+            } else {
+                this._showLogin();
+            }
+        } catch (error) {
+            this._showLogin();
+        }
+    },
+
+    /**
+     * Display user profile and hide login button.
+     * @param {Object} user - User profile object with name and email.
+     * @private
+     */
+    _showProfile(user) {
+        if (this._loginButton) this._loginButton.hidden = true;
+        if (this._profileSection) {
+            this._profileSection.hidden = false;
+            if (this._userName) {
+                this._userName.textContent = user.name || user.email || "User";
+            }
+        }
+        Analytics.trackEvent("user_authenticated", { provider: user.provider || "google" });
+    },
+
+    /**
+     * Display login button and hide user profile.
+     * @private
+     */
+    _showLogin() {
+        if (this._loginButton) this._loginButton.hidden = false;
+        if (this._profileSection) this._profileSection.hidden = true;
+    },
+
+    /**
+     * Log the user out via API and reset to login state.
+     * @private
+     */
+    async _logout() {
+        try {
+            await ApiClient.post("/api/auth/logout", {});
+            this._showLogin();
+            Toast.show("Signed out successfully.", "success");
+            Analytics.trackEvent("user_logged_out");
+        } catch (error) {
+            Toast.show("Sign out failed. Please try again.", "error");
+        }
+    },
+};
+
+// =============================================================================
 // Application Initialization
 // =============================================================================
 
@@ -763,4 +851,5 @@ document.addEventListener("DOMContentLoaded", async () => {
     Tracker.initialize();
     Insights.initialize();
     Chat.initialize();
+    AuthManager.initialize();
 });
